@@ -24,4 +24,4 @@ push:
 	git add .
 	@echo "Enter your commit message:"
 	@read -r msg; git commit -m "$$msg"
-	git push
+	git push --set-upstream origin master
