@@ -1,5 +1,5 @@
 NAME = Matt_daemon
-SRC = main.cpp src/server.cpp
+SRC = main.cpp src/server.cpp src/Tintin_reporter.cpp
 OBJ = $(SRC:.cpp=.o)
 CXX = g++
 CXXFLAGS = -Wall -Wextra -Werror -std=c++17

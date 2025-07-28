@@ -1,4 +1,5 @@
 #include "../include/server.hpp"
+#include "../include/Tintin_reporter.hpp"
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <unistd.h>
@@ -18,6 +19,7 @@ void debug(const std::string& msg);
 
 void run_server()
 {
+    Tintin_reporter logger;
     int server_fd, new_socket, activity, valread;
     int client_socket[MAX_CLIENTS] = {0};
     struct sockaddr_in address;
@@ -29,7 +31,7 @@ void run_server()
     // Create master socket
     if ((server_fd = socket(AF_INET, SOCK_STREAM, 0)) == 0)
     {
-        debug("Socket creation failed");
+        logger.error("Socket creation failed");
         exit(EXIT_FAILURE);
     }
 
@@ -44,7 +46,7 @@ void run_server()
     // Bind
     if (bind(server_fd, (struct sockaddr*)&address, sizeof(address)) < 0)
     {
-        debug("Bind failed");
+        logger.error("Bind failed");
         close(server_fd);
         exit(EXIT_FAILURE);
     }
@@ -52,12 +54,12 @@ void run_server()
     // Listen
     if (listen(server_fd, 3) < 0)
     {
-        debug("Listen failed");
+        logger.error("Listen failed");
         close(server_fd);
         exit(EXIT_FAILURE);
     }
 
-    debug("Server listening on port 4242");
+    logger.info("Server listening on port 4242");
 
     while (true)
     {
@@ -80,7 +82,7 @@ void run_server()
 
         if ((activity < 0) && (errno != EINTR))
         {
-            debug("Select error");
+            logger.error("Select error");
             continue;
         }
 
@@ -89,7 +91,7 @@ void run_server()
         {
             if ((new_socket = accept(server_fd, (struct sockaddr*)&address, &addrlen)) < 0)
             {
-                debug("Accept failed");
+                logger.error("Accept failed");
                 continue;
             }
 
@@ -100,7 +102,7 @@ void run_server()
                 if (client_socket[i] == 0)
                 {
                     client_socket[i] = new_socket;
-                    debug("New client connected");
+                    logger.info("New client connected");
                     added = true;
                     break;
                 }
@@ -108,7 +110,7 @@ void run_server()
 
             if (!added)
             {
-                debug("Too many clients, rejecting connection");
+                logger.error("Too many clients, rejecting connection");
                 close(new_socket);
             }
         }
@@ -123,7 +125,7 @@ void run_server()
                 valread = read(sd, buffer, 1024);
                 if (valread <= 0)
                 {
-                    debug("Client disconnected");
+                    logger.info("Client disconnected");
                     close(sd);
                     client_socket[i] = 0;
                 }
@@ -133,7 +135,7 @@ void run_server()
                     msg.erase(msg.find_last_not_of(" \n\r\t") + 1);
                     if (msg == "quit")
                     {
-                        debug("Received 'quit' → shutting down daemon.");
+                        logger.info("Received 'quit' → shutting down daemon.");
                         for (int j = 0; j < MAX_CLIENTS; j++)
                         {
                             if (client_socket[j] != 0)
@@ -144,7 +146,7 @@ void run_server()
                     }
                     else
                     {
-                        debug("User input: " + msg);
+                        logger.message("User input: " + msg);
                     }
                 }
             }
