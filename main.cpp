@@ -17,26 +17,11 @@
 
 const char *LOCK_FILE = "/var/lock/matt_daemon.lock";
 int lock_fd = -1;
-
-void debug(const std::string &msg)
-{
-    std::ofstream log("/tmp/debug.log", std::ios::app);
-    if (!log.is_open())
-        return;
-
-    // Timestamp
-    auto now = std::chrono::system_clock::now();
-    std::time_t time = std::chrono::system_clock::to_time_t(now);
-    char buf[32];
-    std::strftime(buf, sizeof(buf), "[%d/%m/%Y - %H:%M:%S]", std::localtime(&time));
-
-    log << buf << " " << msg << std::endl;
-    log.close();
-}
+Tintin_reporter logger;
 
 void handle_signal(int signum)
 {
-    debug("Received signal " + std::to_string(signum));
+    logger.info("Received signal " + std::to_string(signum));
     exit(0); // This will trigger atexit()!
 }
 
@@ -49,6 +34,9 @@ void setup_signals()
 void daemonize()
 {
     pid_t pid;
+
+    create_lock_file(logger);
+    logger.info("Lock file created");
 
     pid = fork();
     if (pid < 0)
@@ -114,23 +102,18 @@ void cleanup_lock_file()
 
 int main()
 {
-
-    Tintin_reporter logger;
-    global_logger = &logger;
-    
     if (geteuid() != 0)
     {
         std::cerr << "Matt_daemon must be run as root!" << std::endl;
         exit(EXIT_FAILURE);
     }
-    
+
+    global_logger = &logger;
+
     logger.info("Starting daemon setup...");
 
     daemonize();
     logger.info("Daemonized successfully");
-
-    create_lock_file(logger);
-    logger.info("Lock file created");
 
     setup_signals();
 

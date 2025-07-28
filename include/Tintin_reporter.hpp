@@ -17,6 +17,7 @@ private:
 public:
     Tintin_reporter();
     ~Tintin_reporter();
+    // wa ziiid hna to do
 
     void log(const std::string &level, const std::string &message);
 
