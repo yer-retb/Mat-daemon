@@ -62,6 +62,7 @@
         "sstream": "cpp",
         "stop_token": "cpp",
         "thread": "cpp",
-        "variant": "cpp"
+        "variant": "cpp",
+        "cerrno": "cpp"
     }
 }

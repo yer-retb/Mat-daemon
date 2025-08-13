@@ -4,15 +4,21 @@
 #include <string>
 #include <fstream>
 #include <mutex>
+#include <filesystem>
 
-class Tintin_reporter {
+class Tintin_reporter
+{
 private:
     std::ofstream _logFile;
     std::mutex _logMutex;
     std::string _logPath;
+    static const size_t MAX_LOG_SIZE = 10240; // 10KB
 
     std::string getTimestamp() const;
     void ensureLogDirectoryExists();
+    void rotateLogIfNeeded();
+    std::string generateArchivedName() const;
+    void reopenLogFile();
 
 public:
     Tintin_reporter();

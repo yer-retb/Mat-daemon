@@ -21,7 +21,9 @@ Tintin_reporter logger;
 
 void handle_signal(int signum)
 {
-    logger.info("Received signal " + std::to_string(signum));
+    (void)signum; // Suppress unused parameter warning
+    logger.info("Matt_daemon: Signal handler.");
+    logger.info("Matt_daemon: Quitting.");
     exit(0); // This will trigger atexit()!
 }
 
@@ -35,8 +37,12 @@ void daemonize()
 {
     pid_t pid;
 
-    create_lock_file(logger);
-    logger.info("Lock file created");
+    int lock_fd = open(LOCK_FILE, O_RDONLY);
+    if (lock_fd > 0)
+    {
+        logger.error("Can't open: " + std::string(LOCK_FILE) + " (already locked?)");
+        exit(EXIT_FAILURE);
+    }
 
     pid = fork();
     if (pid < 0)
@@ -110,10 +116,15 @@ int main()
 
     global_logger = &logger;
 
-    logger.info("Starting daemon setup...");
+    logger.info("Matt_daemon: Started.");
 
     daemonize();
-    logger.info("Daemonized successfully");
+    logger.info("Matt_daemon: Creating server.");
+
+    create_lock_file(logger);
+    logger.info("Matt_daemon: Server created.");
+    logger.info("Matt_daemon: Entering Daemon mode.");
+    logger.info("Matt_daemon: started. PID: " + std::to_string(getpid()) + ".");
 
     setup_signals();
 
